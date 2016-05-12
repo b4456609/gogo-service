@@ -1,17 +1,54 @@
-import collections
+from cassandra.cqlengine import columns
+from cassandra.cqlengine import connection
+from cassandra.cqlengine.models import Model
+from cassandra.cqlengine.usertype import UserType
+from cassandra.cqlengine import management
 
-SunTime = collections.namedtuple('SunTime',
-                                 ['sunrise', 'sunset'])
-BasicMetrics = collections.namedtuple('BasicMetrics',
-                                      ['time', 'temp', 'humd', 'wind_speed_10min', 'wind_dir_10min'])
-RainDetail = collections.namedtuple('RainDetail',
-                                    ['time', 'rain_10min', 'rain_60min', 'rain_3hr', 'rain_6hr', 'rain_12hr',
-                                     'rain_24hr'])
-AirPollution = collections.namedtuple('AirPollution', ['psi', 'pm2_5'])
 
-class Metrics():
-    def __init__(self, SunTime, BasicMetrics, RainDetail, AirPollution):
-        self.SunTime = SunTime;
-        self.BasicMetrics = BasicMetrics;
-        self.RainDetail = RainDetail;
-        self.AirPollution = AirPollution;
+class Air(UserType):
+    psi = columns.Integer()
+    pm2_5 = columns.Integer()
+
+
+class Sun(UserType):
+    sunset = columns.Time()
+    sunrise = columns.Time()
+
+
+class Rain(UserType):
+    rain_10min = columns.Float()
+    rain_60min = columns.Float()
+    rain_3hr = columns.Float()
+    rain_6hr = columns.Float()
+    rain_12hr = columns.Float()
+    rain_24hr = columns.Float()
+
+class Basic(UserType):
+    wind_dir_10min = columns.Integer()
+    wind_speed_10min = columns.Float()
+    humd = columns.Float()
+    temp = columns.Float()
+
+class Weather(Model):
+    time = columns.DateTime(primary_key=True)
+    uv = columns.Float()
+    air = columns.UserDefinedType(Air)
+    sun = columns.UserDefinedType(Sun)
+    rain = columns.UserDefinedType(Rain)
+    basic = columns.UserDefinedType(Basic)
+
+def main():
+    # create a keyspace "test"
+    connection.default()
+    management.create_keyspace_simple('test', 3)
+
+    # connect to test keyspace
+    connection.setup(['127.0.0.1'], "test", protocol_version=3)
+
+    management.sync_type('test', Air)
+    management.sync_type('test', Sun)
+    management.sync_type('test', Rain)
+    management.sync_type('test', Basic)
+    management.sync_table(Weather)
+
+main()
