@@ -4,26 +4,49 @@ from flask import request
 import datetime
 import json
 import model
+from cassandra.cqlengine import connection
 
 app = Flask(__name__)
 
 
-class Weather(object):
-    def __init__(self, humid, temp):
-        self.humidd = humid
-        self.temp = temp
-
-
-w = Weather(1, 2)
-
-
 @app.route('/', methods=['GET'])
-def index():
-    return jsonify(w.__dict__)
+def getWeather():
+    res = []
+    q = model.Weather.objects()
+    for i in q:
+        j = {
+            "air": {
+                "psi": i.air.psi,
+                "pm2_5": i.air.pm2_5
+            },
+            "sun": {
+                "sunset": datetime.time(i.sun.sunset.hour,i.sun.sunset.minute,i.sun.sunset.second).isoformat(),
+                "sunrise": datetime.time(i.sun.sunrise.hour,i.sun.sunrise.minute,i.sun.sunrise.second).isoformat()
+            },
+            "uv": i.uv,
+            "rain": {
+                "rain_10min": i.rain.rain_10min,
+                "rain_60min": i.rain.rain_60min,
+                "rain_3hr": i.rain.rain_3hr,
+                "rain_6hr": i.rain.rain_6hr,
+                "rain_12hr": i.rain.rain_12hr,
+                "rain_24hr": i.rain.rain_24hr
+            },
+            "basic": {
+                "wind_dir_10min": i.basic.wind_dir_10min,
+                "wind_speed_10min": i.basic.wind_speed_10min,
+                "humd": i.basic.humd,
+                "temp": i.basic.temp,
+                "time": i.basic.time
+            }
+        }
+        res.append(j)
+    print res
+    return json.dumps(res), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/', methods=['POST'])
-def hello():
+def addWeather():
     app.logger.debug(request.data)
     j = request.get_json()
     app.logger.debug(j)
@@ -64,8 +87,10 @@ def hello():
 
     weather.save()
 
-    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    return json.dumps({'success': True}), 200, {'Content-Type': 'application/json'}
 
 
 if __name__ == '__main__':
+    # connect to test keyspace
+    connection.setup(['140.121.101.164'], "test")
     app.run(debug=True)
