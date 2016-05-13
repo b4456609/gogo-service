@@ -4,6 +4,7 @@ from flask import request
 import datetime
 import json
 import model
+from  dateutil.parser import parse
 from cassandra.cqlengine import connection
 
 app = Flask(__name__)
@@ -20,8 +21,8 @@ def getWeather():
                 "pm2_5": i.air.pm2_5
             },
             "sun": {
-                "sunset": datetime.time(i.sun.sunset.hour,i.sun.sunset.minute,i.sun.sunset.second).isoformat(),
-                "sunrise": datetime.time(i.sun.sunrise.hour,i.sun.sunrise.minute,i.sun.sunrise.second).isoformat()
+                "sunset": datetime.time(i.sun.sunset.hour, i.sun.sunset.minute, i.sun.sunset.second).isoformat(),
+                "sunrise": datetime.time(i.sun.sunrise.hour, i.sun.sunrise.minute, i.sun.sunrise.second).isoformat()
             },
             "uv": i.uv,
             "rain": {
@@ -37,8 +38,8 @@ def getWeather():
                 "wind_speed_10min": i.basic.wind_speed_10min,
                 "humd": i.basic.humd,
                 "temp": i.basic.temp,
-                "time": i.basic.time
-            }
+            },
+            "time": i.time.isoformat()
         }
         res.append(j)
     print res
@@ -54,7 +55,7 @@ def addWeather():
     air = model.Air(psi=j['air']['psi'], pm2_5=j['air']['pm2_5'])
     app.logger.debug(air)
 
-    sun = model.Sun(sunset=j['sun']['sunset'], sunrise=j['sun']['sunset'])
+    sun = model.Sun(sunset=parse(j['sun']['sunset']).time(), sunrise=parse(j['sun']['sunrise']).time())
     app.logger.debug(sun)
 
     rain = model.Rain(
@@ -75,13 +76,22 @@ def addWeather():
     )
     app.logger.debug(basic)
 
+    value = model.Value(
+        sun=j['value']['sun'],
+        weather=j['value']['weather'],
+        uv=j['value']['uv'],
+        rain=j['value']['rain'],
+        air=j['value']['air']
+    )
+
     weather = model.Weather(
-        time=datetime.datetime.strptime(j['basic']['time'], "%Y-%m-%dT%H:%M:%S"),
+        time=parse(j['basic']['time']),
         uv=j['uv'],
         air=air,
         sun=sun,
         rain=rain,
-        basic=basic
+        basic=basic,
+        value=value
     )
     app.logger.debug(weather)
 
@@ -93,4 +103,4 @@ def addWeather():
 if __name__ == '__main__':
     # connect to test keyspace
     connection.setup(['140.121.101.164'], "test")
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
