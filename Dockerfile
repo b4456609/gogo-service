@@ -1,5 +1,5 @@
 # Set the base image to Ubuntu
-FROM ubuntu
+FROM ubuntu:14.04
 
 # Add the application resources URL
 RUN echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) main universe" >> /etc/apt/sources.list
@@ -33,4 +33,5 @@ EXPOSE 5000
 # Set the default command to execute
 # when creating a new container
 # i.e. using CherryPy to serve the application
-CMD python api.py
+ENTRYPOINT ["python"]
+CMD ["api.py"]

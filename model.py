@@ -29,6 +29,14 @@ class Basic(UserType):
     humd = columns.Float()
     temp = columns.Float()
 
+
+class Value(UserType):
+    sun = columns.Integer()
+    weather = columns.Integer()
+    uv = columns.Integer()
+    rain = columns.Integer()
+    air = columns.Integer()
+
 class Weather(Model):
     time = columns.DateTime(primary_key=True)
     uv = columns.Float()
@@ -36,6 +44,7 @@ class Weather(Model):
     sun = columns.UserDefinedType(Sun)
     rain = columns.UserDefinedType(Rain)
     basic = columns.UserDefinedType(Basic)
+    value = columns.UserDefinedType(Value)
 
 def main():
     # create a keyspace "test"
@@ -49,6 +58,7 @@ def main():
     management.sync_type('test', Sun)
     management.sync_type('test', Rain)
     management.sync_type('test', Basic)
+    management.sync_type('test', Value)
     management.sync_table(Weather)
 
 main()
