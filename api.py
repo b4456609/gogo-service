@@ -7,6 +7,7 @@ import model
 from  dateutil.parser import parse
 from cassandra.cqlengine import connection
 from flask.ext.cors import CORS
+import pytz
 from cassandra.cluster import Cluster
 
 app = Flask(__name__)
@@ -49,7 +50,7 @@ def getWeather():
                 "humd": i.basic.humd,
                 "temp": i.basic.temp,
             },
-            "time": i.time.isoformat()
+            "time": pytz.timezone('Asia/Taipei').localize(i.time).isoformat()
         }
         if i.value is not None:
             value = {
