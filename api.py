@@ -6,8 +6,10 @@ import json
 import model
 from  dateutil.parser import parse
 from cassandra.cqlengine import connection
+from flask.ext.cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/', methods=['GET'])
@@ -41,6 +43,16 @@ def getWeather():
             },
             "time": i.time.isoformat()
         }
+        if i.value is not None:
+            value = {
+                "sun": i.value.sun,
+                "weather": i.value.weather,
+                "uv": i.value.uv,
+                "rain": i.value.rain,
+                "air": i.value.air
+            }
+            j['value'] = value
+
         res.append(j)
     print res
     return json.dumps(res), 200, {'Content-Type': 'application/json'}
