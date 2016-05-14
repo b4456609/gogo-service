@@ -54,7 +54,7 @@ def addItem(q, temp, humid, rain, time):
 
         temp.append(round(i.basic.temp, 2))
         humid.append(round(i.basic.humd * 100, 2))
-        time.append(pytz.timezone('Asia/Taipei').localize(i.time).isoformat())
+        time.append(pytz.timezone('Asia/Taipei').localize(i.time + datetime.timedelta(hours=8)).isoformat())
         rain.append(max(i.rain.rain_10min, 0))
 
 
@@ -98,7 +98,7 @@ def getWeather():
     # ::-1 reverse list
     resp = {
         'tempHumidRainChart': {
-            'temp': temp[::-1],
+            'temp': temp,
             'humid': humid[::-1],
             'rain': rain[::-1],
             'time': time[::-1]
