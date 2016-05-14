@@ -14,57 +14,100 @@ app = Flask(__name__)
 CORS(app)
 
 
+def addItem(q, temp, humid, rain, time):
+    for i in q:
+        # j = {
+        #     "air": {
+        #         "psi": i.air.psi,
+        #         "pm2_5": i.air.pm2_5
+        #     },
+        #     "sun": {
+        #         "sunset": datetime.time(i.sun.sunset.hour, i.sun.sunset.minute, i.sun.sunset.second).isoformat(),
+        #         "sunrise": datetime.time(i.sun.sunrise.hour, i.sun.sunrise.minute, i.sun.sunrise.second).isoformat()
+        #     },
+        #     "uv": i.uv,
+        #     "rain": {
+        #         "rain_10min": i.rain.rain_10min,
+        #         "rain_60min": i.rain.rain_60min,
+        #         "rain_3hr": i.rain.rain_3hr,
+        #         "rain_6hr": i.rain.rain_6hr,
+        #         "rain_12hr": i.rain.rain_12hr,
+        #         "rain_24hr": i.rain.rain_24hr
+        #     },
+        #     "basic": {
+        #         "wind_dir_10min": i.basic.wind_dir_10min,
+        #         "wind_speed_10min": i.basic.wind_speed_10min,
+        #         "humd": i.basic.humd,
+        #         "temp": i.basic.temp,
+        #     },
+        #     "time": pytz.timezone('Asia/Taipei').localize(i.time).isoformat()
+        # }
+        # if i.value is not None:
+        #     value = {
+        #         "sun": i.value.sun,
+        #         "weather": i.value.weather,
+        #         "uv": i.value.uv,
+        #         "rain": i.value.rain,
+        #         "air": i.value.air
+        #     }
+        #     j['value'] = value
+
+        temp.append(round(i.basic.temp, 2))
+        humid.append(round(i.basic.humd * 100, 2))
+        time.append(pytz.timezone('Asia/Taipei').localize(i.time).isoformat())
+        rain.append(max(i.rain.rain_10min, 0))
+
+
 @app.route('/', methods=['GET'])
 def getWeather():
-    res = []
-    # cluster = Cluster(
-    #     ['140.121.101.164'],
-    #     port=9042)
-    # session = cluster.connect('weather1')
-    # now = datetime.datetime.now().isoformat()
-    # q = session.execute("SELECT * FROM weather WHERE date IN (dateOf(now())) ORDER BY time desc LIMIT 10 ALLOW FILTERING")
-    q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(3).order_by('-time')
-    # q = model.Weather.objects()
-    for i in q:
-        j = {
-            "air": {
-                "psi": i.air.psi,
-                "pm2_5": i.air.pm2_5
-            },
-            "sun": {
-                "sunset": datetime.time(i.sun.sunset.hour, i.sun.sunset.minute, i.sun.sunset.second).isoformat(),
-                "sunrise": datetime.time(i.sun.sunrise.hour, i.sun.sunrise.minute, i.sun.sunrise.second).isoformat()
-            },
-            "uv": i.uv,
-            "rain": {
-                "rain_10min": i.rain.rain_10min,
-                "rain_60min": i.rain.rain_60min,
-                "rain_3hr": i.rain.rain_3hr,
-                "rain_6hr": i.rain.rain_6hr,
-                "rain_12hr": i.rain.rain_12hr,
-                "rain_24hr": i.rain.rain_24hr
-            },
-            "basic": {
-                "wind_dir_10min": i.basic.wind_dir_10min,
-                "wind_speed_10min": i.basic.wind_speed_10min,
-                "humd": i.basic.humd,
-                "temp": i.basic.temp,
-            },
-            "time": pytz.timezone('Asia/Taipei').localize(i.time).isoformat()
-        }
-        if i.value is not None:
-            value = {
-                "sun": i.value.sun,
-                "weather": i.value.weather,
-                "uv": i.value.uv,
-                "rain": i.value.rain,
-                "air": i.value.air
-            }
-            j['value'] = value
+    temp = []
+    humid = []
+    time = []
+    rain = []
+    radarData = {}
+    metric = {}
 
-        res.append(j)
-    print res
-    return json.dumps(res), 200, {'Content-Type': 'application/json'}
+    q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(36).order_by('-time')
+    # q = model.Weather.objects()
+
+    if q.count() > 0:
+        radarData = {
+            "sun": q[0].value.sun,
+            "weather": q[0].value.weather,
+            "uv": q[0].value.uv,
+            "rain": q[0].value.rain,
+            "air": q[0].value.air
+        }
+        metric = {
+            'temp': round(q[0].basic.temp, 2),
+            'humd': round(q[0].basic.humd * 100, 2),
+            'uv': q[0].uv,
+            'pm2_5': q[0].air.pm2_5,
+            'psi': q[0].air.psi,
+            'sunset': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute, q[0].sun.sunset.second).isoformat(),
+            'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute, q[0].sun.sunset.second).isoformat(),
+            'wind': max(round(q[0].basic.wind_speed_10min, 2), 0),
+        }
+
+    addItem(q, temp, humid, rain, time)
+    if q.count() < 36:
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        q = model.Weather.objects(date=yesterday.isoformat()).limit(36 - q.count()).order_by('-time')
+        addItem(q, temp, humid, rain, time)
+
+    # ::-1 reverse list
+    resp = {
+        'tempHumidRainChart': {
+            'temp': temp[::-1],
+            'humid': humid[::-1],
+            'rain': rain[::-1],
+            'time': time[::-1]
+        },
+        'radar': radarData,
+        'metric': metric
+    }
+    print resp
+    return json.dumps(resp), 200, {'Content-Type': 'application/json'}
 
 
 @app.route('/', methods=['POST'])
@@ -178,6 +221,7 @@ def addMultiWeather():
         weather.save()
 
     return json.dumps({'success': True}), 200, {'Content-Type': 'application/json'}
+
 
 if __name__ == '__main__':
     # connect to test keyspace
