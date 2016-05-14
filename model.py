@@ -38,6 +38,7 @@ class Value(UserType):
     air = columns.Integer()
 
 class Weather(Model):
+    # date = columns.Date(primary_key=True)
     time = columns.DateTime(primary_key=True)
     uv = columns.Float()
     air = columns.UserDefinedType(Air)
@@ -48,11 +49,11 @@ class Weather(Model):
 
 def main():
     # create a keyspace "test"
-    connection.setup(['140.121.101.164'], "test")
-    management.create_keyspace_simple('test', 3)
+    connection.setup(['140.121.101.164'], "weather1")
+    management.create_keyspace_simple('weather1', 3)
 
     # connect to test keyspace
-    connection.setup(['140.121.101.164'], "test", protocol_version=3)
+    connection.setup(['140.121.101.164'], "weather1", protocol_version=3)
 
     management.sync_type('test', Air)
     management.sync_type('test', Sun)
@@ -61,4 +62,4 @@ def main():
     management.sync_type('test', Value)
     management.sync_table(Weather)
 
-main()
+    # main()

@@ -7,6 +7,7 @@ import model
 from  dateutil.parser import parse
 from cassandra.cqlengine import connection
 from flask.ext.cors import CORS
+from cassandra.cluster import Cluster
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +16,13 @@ CORS(app)
 @app.route('/', methods=['GET'])
 def getWeather():
     res = []
+    # cluster = Cluster(
+    #     ['140.121.101.164'],
+    #     port=9042)
+    # session = cluster.connect('weather1')
+    # now = datetime.datetime.now().isoformat()
+    # q = session.execute("SELECT * FROM weather WHERE date IN (dateOf(now())) ORDER BY time desc LIMIT 10 ALLOW FILTERING")
+    # q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(100).order_by('time')
     q = model.Weather.objects()
     for i in q:
         j = {
@@ -97,6 +105,7 @@ def addWeather():
     )
 
     weather = model.Weather(
+        date=parse(j['basic']['time']),
         time=parse(j['basic']['time']),
         uv=j['uv'],
         air=air,
@@ -111,6 +120,61 @@ def addWeather():
 
     return json.dumps({'success': True}), 200, {'Content-Type': 'application/json'}
 
+
+@app.route('/multi', methods=['POST'])
+def addMultiWeather():
+    app.logger.debug(request.data)
+    d = request.get_json()
+    app.logger.debug(d)
+
+    for j in d:
+        air = model.Air(psi=j['air']['psi'], pm2_5=j['air']['pm2_5'])
+        app.logger.debug(air)
+
+        sun = model.Sun(sunset=parse(j['sun']['sunset']).time(), sunrise=parse(j['sun']['sunrise']).time())
+        app.logger.debug(sun)
+
+        rain = model.Rain(
+            rain_10min=j['rain']['rain_10min'],
+            rain_60min=j['rain']['rain_60min'],
+            rain_3hr=j['rain']['rain_3hr'],
+            rain_6hr=j['rain']['rain_6hr'],
+            rain_12hr=j['rain']['rain_12hr'],
+            rain_24hr=j['rain']['rain_24hr']
+        )
+        app.logger.debug(rain)
+
+        basic = model.Basic(
+            wind_dir_10min=j['basic']['wind_dir_10min'],
+            wind_speed_10min=j['basic']['wind_speed_10min'],
+            humd=j['basic']['humd'],
+            temp=j['basic']['temp']
+        )
+        app.logger.debug(basic)
+
+        value = model.Value(
+            sun=j['value']['sun'],
+            weather=j['value']['weather'],
+            uv=j['value']['uv'],
+            rain=j['value']['rain'],
+            air=j['value']['air']
+        )
+
+        weather = model.Weather(
+            date=parse(j['basic']['time']),
+            time=parse(j['basic']['time']),
+            uv=j['uv'],
+            air=air,
+            sun=sun,
+            rain=rain,
+            basic=basic,
+            value=value
+        )
+        app.logger.debug(weather)
+
+        weather.save()
+
+    return json.dumps({'success': True}), 200, {'Content-Type': 'application/json'}
 
 if __name__ == '__main__':
     # connect to test keyspace
