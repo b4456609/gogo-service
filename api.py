@@ -22,8 +22,8 @@ def getWeather():
     # session = cluster.connect('weather1')
     # now = datetime.datetime.now().isoformat()
     # q = session.execute("SELECT * FROM weather WHERE date IN (dateOf(now())) ORDER BY time desc LIMIT 10 ALLOW FILTERING")
-    # q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(100).order_by('time')
-    q = model.Weather.objects()
+    q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(3).order_by('-time')
+    # q = model.Weather.objects()
     for i in q:
         j = {
             "air": {
@@ -152,17 +152,19 @@ def addMultiWeather():
         )
         app.logger.debug(basic)
 
-        value = model.Value(
-            sun=j['value']['sun'],
-            weather=j['value']['weather'],
-            uv=j['value']['uv'],
-            rain=j['value']['rain'],
-            air=j['value']['air']
-        )
+        value = None
+        if 'value' in j:
+            value = model.Value(
+                sun=j['value']['sun'],
+                weather=j['value']['weather'],
+                uv=j['value']['uv'],
+                rain=j['value']['rain'],
+                air=j['value']['air']
+            )
 
         weather = model.Weather(
-            date=parse(j['basic']['time']),
-            time=parse(j['basic']['time']),
+            date=parse(j['time']),
+            time=parse(j['time']),
             uv=j['uv'],
             air=air,
             sun=sun,
@@ -178,5 +180,5 @@ def addMultiWeather():
 
 if __name__ == '__main__':
     # connect to test keyspace
-    connection.setup(['140.121.101.164'], "test")
+    connection.setup(['140.121.101.164'], "weather1")
     app.run(debug=True, host='0.0.0.0')

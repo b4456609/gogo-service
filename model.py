@@ -38,7 +38,7 @@ class Value(UserType):
     air = columns.Integer()
 
 class Weather(Model):
-    # date = columns.Date(primary_key=True)
+    date = columns.Date(primary_key=True)
     time = columns.DateTime(primary_key=True)
     uv = columns.Float()
     air = columns.UserDefinedType(Air)
