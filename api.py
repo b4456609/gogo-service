@@ -122,8 +122,8 @@ def getWeather():
             'psi': q[0].air.psi,
             'sunset': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
                                     q[0].sun.sunset.second).isoformat(),
-            'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
-                                     q[0].sun.sunset.second).isoformat(),
+            'sunrise': datetime.time(q[0].sun.sunrise.hour, q[0].sun.sunrise.minute,
+                                     q[0].sun.sunrise.second).isoformat(),
             'wind': max(round(q[0].basic.wind_speed_10min, 2), 0),
         }
 
