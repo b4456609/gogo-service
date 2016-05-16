@@ -58,6 +58,36 @@ def addItem(q, temp, humid, rain, time):
         rain.append(max(i.rain.rain_10min, 0))
 
 
+def getWindAnalysis(q):
+    res = []
+
+    for i in range(36):
+        res.append({
+            "d": i * 10,
+            "count": 0,
+            "avg": 0
+        })
+
+    res.append({
+        "d": None,
+        "count": 0,
+        "avg": 0
+    })
+
+    for i in q:
+        if i.basic.wind_dir_10min >= 0:
+            res[i.basic.wind_dir_10min / 10]['count'] += 1
+            res[i.basic.wind_dir_10min / 10]['avg'] += i.basic.wind_speed_10min
+        else:
+            res[36]['count'] += 1
+
+    for i in res:
+        if i['count'] is not 0:
+            i['avg'] /= i['count']
+
+    return res
+
+
 @app.route('/', methods=['GET'])
 def getWeather():
     temp = []
@@ -69,6 +99,12 @@ def getWeather():
 
     q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(36).order_by('-time')
     # q = model.Weather.objects()
+
+    addItem(q, temp, humid, rain, time)
+    if q.count() < 36:
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        q = model.Weather.objects(date=yesterday.isoformat()).limit(36 - q.count()).order_by('-time')
+        addItem(q, temp, humid, rain, time)
 
     if q.count() > 0:
         radarData = {
@@ -84,16 +120,12 @@ def getWeather():
             'uv': q[0].uv,
             'pm2_5': q[0].air.pm2_5,
             'psi': q[0].air.psi,
-            'sunset': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute, q[0].sun.sunset.second).isoformat(),
-            'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute, q[0].sun.sunset.second).isoformat(),
+            'sunset': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
+                                    q[0].sun.sunset.second).isoformat(),
+            'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
+                                     q[0].sun.sunset.second).isoformat(),
             'wind': max(round(q[0].basic.wind_speed_10min, 2), 0),
         }
-
-    addItem(q, temp, humid, rain, time)
-    if q.count() < 36:
-        yesterday = datetime.date.today() - datetime.timedelta(days=1)
-        q = model.Weather.objects(date=yesterday.isoformat()).limit(36 - q.count()).order_by('-time')
-        addItem(q, temp, humid, rain, time)
 
     # ::-1 reverse list
     resp = {
@@ -104,7 +136,8 @@ def getWeather():
             'time': time[::-1]
         },
         'radar': radarData,
-        'metric': metric
+        'metric': metric,
+        'windChart': getWindAnalysis(q)
     }
     print resp
     return json.dumps(resp), 200, {'Content-Type': 'application/json'}
