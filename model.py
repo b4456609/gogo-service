@@ -36,6 +36,7 @@ class Value(UserType):
     uv = columns.Integer()
     rain = columns.Integer()
     air = columns.Integer()
+    predict = columns.Integer()
 
 class Weather(Model):
     date = columns.Date(primary_key=True)

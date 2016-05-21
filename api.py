@@ -112,7 +112,8 @@ def getWeather():
             "weather": q[0].value.weather,
             "uv": q[0].value.uv,
             "rain": q[0].value.rain,
-            "air": q[0].value.air
+            "air": q[0].value.air,
+            "predict": q[0].value.predict
         }
         metric = {
             'temp': round(q[0].basic.temp, 2),
@@ -178,7 +179,8 @@ def addWeather():
         weather=j['value']['weather'],
         uv=j['value']['uv'],
         rain=j['value']['rain'],
-        air=j['value']['air']
+        air=j['value']['air'],
+        predict=j['value']['predict'],
     )
 
     weather = model.Weather(
