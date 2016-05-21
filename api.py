@@ -125,8 +125,8 @@ def getWeather():
             'psi': q[0].air.psi,
             'sunset': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
                                     q[0].sun.sunset.second).isoformat(),
-            'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
-                                     q[0].sun.sunset.second).isoformat(),
+            'sunrise': datetime.time(q[0].sun.sunrise.hour, q[0].sun.sunrise.minute,
+                                     q[0].sun.sunrise.second).isoformat(),
             'wind': max(round(q[0].basic.wind_speed_10min, 2), 0)
         }
 
@@ -275,4 +275,4 @@ def addMultiWeather():
 if __name__ == '__main__':
     # connect to test keyspace
     connection.setup(['140.121.101.164'], "weather1")
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')
