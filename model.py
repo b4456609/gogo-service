@@ -46,6 +46,15 @@ class Weather(Model):
     rain = columns.UserDefinedType(Rain)
     basic = columns.UserDefinedType(Basic)
     value = columns.UserDefinedType(Value)
+    predict = columns.Map(columns.Text, columns.List(columns.Text))
+
+
+# transform int to str for db need
+def trasformPredictMetrics(data):
+    data['humid'] = map(lambda x: str(x), data['humid'])
+    data['predictRate'] = map(lambda x: str(x), data['predictRate'])
+    data['temp'] = map(lambda x: str(x), data['temp'])
+    return data
 
 def main():
     # create a keyspace "test"
@@ -62,4 +71,4 @@ def main():
     management.sync_type('test', Value)
     management.sync_table(Weather)
 
-    # main()
+# main()

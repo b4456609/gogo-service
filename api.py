@@ -189,8 +189,11 @@ def addWeather():
         sun=sun,
         rain=rain,
         basic=basic,
-        value=value
+        value=value,
+        predict=model.trasformPredictMetrics(j['predictMetrics'])
     )
+
+    app.logger.debug(j['predictMetrics'])
     app.logger.debug(weather)
 
     weather.save()
@@ -247,8 +250,10 @@ def addMultiWeather():
             sun=sun,
             rain=rain,
             basic=basic,
-            value=value
+            value=value,
+            predict=j['predictMetrics']
         )
+        app.logger.debug(j['predictMetrics'])
         app.logger.debug(weather)
 
         weather.save()
