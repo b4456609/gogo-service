@@ -96,6 +96,8 @@ def getWeather():
     rain = []
     radarData = {}
     metric = {}
+    predict = {}
+    metricTime = 0
 
     q = model.Weather.objects(date=datetime.date.today().isoformat()).limit(36).order_by('-time')
     # q = model.Weather.objects()
@@ -125,8 +127,12 @@ def getWeather():
                                     q[0].sun.sunset.second).isoformat(),
             'sunrise': datetime.time(q[0].sun.sunset.hour, q[0].sun.sunset.minute,
                                      q[0].sun.sunset.second).isoformat(),
-            'wind': max(round(q[0].basic.wind_speed_10min, 2), 0),
+            'wind': max(round(q[0].basic.wind_speed_10min, 2), 0)
         }
+
+        metricTime = pytz.timezone('Asia/Taipei').localize(q[0].time + datetime.timedelta(hours=8)).isoformat()
+
+        predict = model.trasformPredictMetricsToInt(q[0].predict)
 
     # ::-1 reverse list
     resp = {
@@ -138,8 +144,11 @@ def getWeather():
         },
         'radar': radarData,
         'metric': metric,
-        'windChart': getWindAnalysis(q)
+        'windChart': getWindAnalysis(q),
+        'predict': predict,
+        'metricTime': metricTime
     }
+    app.logger.debug(q[0].predict)
     print resp
     return json.dumps(resp), 200, {'Content-Type': 'application/json'}
 

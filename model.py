@@ -3,6 +3,7 @@ from cassandra.cqlengine import connection
 from cassandra.cqlengine.models import Model
 from cassandra.cqlengine.usertype import UserType
 from cassandra.cqlengine import management
+import api
 
 
 class Air(UserType):
@@ -56,6 +57,26 @@ def trasformPredictMetrics(data):
     data['predictRate'] = map(lambda x: str(x), data['predictRate'])
     data['temp'] = map(lambda x: str(x), data['temp'])
     return data
+
+
+# transform int to str for db need
+def trasformPredictMetricsToInt(data):
+    res = {}
+    if 'predictTime' in data:
+        res['predictTime'] = data['predictTime']
+        res['time'] = data['time']
+        res['humid'] = []
+        res['predictRate'] = []
+        res['temp'] = []
+        for i in data['humid']:
+            res['humid'].append(int(i))
+
+        for i in data['predictRate']:
+            res['predictRate'].append(int(i))
+
+        for i in data['temp']:
+            res['temp'].append(int(i))
+    return res
 
 def main():
     # create a keyspace "test"
