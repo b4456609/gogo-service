@@ -275,4 +275,4 @@ def addMultiWeather():
 if __name__ == '__main__':
     # connect to test keyspace
     connection.setup(['140.121.101.164'], "weather1")
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=True,host='0.0.0.0')
