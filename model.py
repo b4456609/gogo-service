@@ -97,4 +97,4 @@ def main():
     management.sync_type('test', Value)
     management.sync_table(Weather)
 
-main()
+# main()

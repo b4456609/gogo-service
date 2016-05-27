@@ -55,6 +55,20 @@ def getWindAnalysis(q):
 
 @app.route('/', methods=['GET'])
 def getWeather():
+    startTime = request.args.get('start', None)
+    endTime = request.args.get('end', None)
+    app.logger.debug(startTime)
+    app.logger.debug(endTime)
+    
+    if startTime is not None and endTime is not None:
+        start = parse(startTime)
+        end = parse(endTime)
+        q = model.Weather.objects.filter(location=location).filter(model.Weather.time>=start).filter(model.Weather.time<=end).order_by('-time')
+    else:
+        # query for data
+        q = model.Weather.objects(location=location).limit(36).order_by('-time')
+    
+    # prepare default response
     temp = []
     humid = []
     time = []
@@ -63,9 +77,7 @@ def getWeather():
     metric = {}
     predict = {}
     metricTime = 0
-
-    q = model.Weather.objects(location=location).limit(36).order_by('-time')
-
+    # add item to response data
     addItem(q, temp, humid, rain, time)
     if q.count() > 0:
         radarData = {
@@ -107,7 +119,7 @@ def getWeather():
         'predict': predict,
         'metricTime': metricTime
     }
-    app.logger.debug(q[0].predict)
+    # app.logger.debug(q[0].predict)
     print resp
     return json.dumps(resp), 200, {'Content-Type': 'application/json'}
 
@@ -173,4 +185,4 @@ def addWeather():
 if __name__ == '__main__':
     # connect to test keyspace
     connection.setup(['140.121.101.164'], "weather2")
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')
