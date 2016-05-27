@@ -53,10 +53,14 @@ class Weather(Model):
 
 # transform int to str for db need
 def trasformPredictMetrics(data):
-    data['humid'] = map(lambda x: str(x), data['humid'])
-    data['predictRate'] = map(lambda x: str(x), data['predictRate'])
-    data['temp'] = map(lambda x: str(x), data['temp'])
-    return data
+    res = {}
+    if 'predictTime' in data:
+        res['humid'] = map(lambda x: str(x), data['humid'])
+        res['predictRate'] = map(lambda x: str(x), data['predictRate'])
+        res['temp'] = map(lambda x: str(x), data['temp'])
+        res['predictTime'] = data['predictTime']
+        res['time'] = data['time']
+    return res
 
 
 # transform int to str for db need
