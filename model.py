@@ -54,7 +54,7 @@ class Weather(Model):
 # transform int to str for db need
 def trasformPredictMetrics(data):
     res = {}
-    if 'predictTime' in data:
+    if data is no None:
         res['humid'] = map(lambda x: str(x), data['humid'])
         res['predictRate'] = map(lambda x: str(x), data['predictRate'])
         res['temp'] = map(lambda x: str(x), data['temp'])
