@@ -17,6 +17,7 @@ location = 'Jhongjheng District, Keelung City'
 
 def addItem(q, temp, humid, rain, time):
     for i in q:
+        print i.basic.temp, i.time
         temp.append(round(i.basic.temp, 2))
         humid.append(round(i.basic.humd * 100, 2))
         time.append(pytz.timezone('Asia/Taipei').localize(i.time + datetime.timedelta(hours=8)).isoformat())
@@ -108,7 +109,7 @@ def getWeather():
     # ::-1 reverse list
     resp = {
         'tempHumidRainChart': {
-            'temp': temp,
+            'temp': temp[::-1],
             'humid': humid[::-1],
             'rain': rain[::-1],
             'time': time[::-1]
