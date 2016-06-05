@@ -15,12 +15,16 @@ CORS(app)
 
 location = 'Jhongjheng District, Keelung City'
 
-def addItem(q, temp, humid, rain, time):
+
+def addItem(q, temp, humid, rain, time, pm2_5, psi):
     for i in q:
         temp.append(round(i.basic.temp, 2))
         humid.append(round(i.basic.humd * 100, 2))
         time.append(pytz.timezone('Asia/Taipei').localize(i.time + datetime.timedelta(hours=8)).isoformat())
         rain.append(max(i.rain.rain_10min, 0))
+        pm2_5.append(i.air.pm2_5)
+        psi.append(i.air.psi)
+
 
 
 def getWindAnalysis(q):
@@ -76,9 +80,11 @@ def getWeather():
     radarData = {}
     metric = {}
     predict = {}
+    pm2_5 = []
+    psi = []
     metricTime = 0
     # add item to response data
-    addItem(q, temp, humid, rain, time)
+    addItem(q, temp, humid, rain, time, pm2_5, psi)
     if q.count() > 0:
         radarData = {
             "sun": q[0].value.sun,
@@ -117,7 +123,12 @@ def getWeather():
         'metric': metric,
         'windChart': getWindAnalysis(q),
         'predict': predict,
-        'metricTime': metricTime
+        'metricTime': metricTime,
+        'air': {
+            'pm2_5': pm2_5[::-1],
+            'psi': psi[::-1],
+            'time': time[::-1]
+        }
     }
     # app.logger.debug(q[0].predict)
     print resp
